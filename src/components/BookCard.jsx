@@ -1,16 +1,16 @@
-const BookCard = () => {
+const BookCard = ({title, author_name, first_publish_year, cover_i}) => {
     return (
         <a className="book-card" href="book.html">
             <div className="book-image">
                 <img
-                    src="https://covers.openlibrary.org/b/id/8231856-L.jpg"
+                    src={`https://covers.openlibrary.org/b/id/&{cover_i}-L.jpg`}
                     alt="The Little Prince"
                 />
                 <button className="favorite">♡</button>
             </div>
             <div className="book-info">
-                <h3>The Little Prince</h3>
-                <p>Antoine de Saint-Exupéry</p>
+                <h3>{title}</h3>
+                <p>{author_name.join(", ")}</p>
                 <span className="year">1943</span>
             </div>
         </a>
