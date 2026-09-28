@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import BookCard from "../components/BookCard"
+import Loader from "../components/Loader"
 
 const Search = () => {
     const navigate = useNavigate()
@@ -13,17 +14,39 @@ const Search = () => {
 
     const [books, setBooks] = useState([])
 
+    const [error, setError] = useState(null)
+
+    const [isLoading, setIsLoading] = useState(false)
 
 
     useEffect(() => {
         const LoadBooks = async () => {
+            try {
+            setIsLoading(true)
+            setError(null)
             const res = await fetch("https://openlibrary.org/search.json" + "?q=" + queryParams + "&liit=20")
+            
+            if (!res.ok) {
+                const errorData = await res.json()
+
+                throw new Error(errorData.detail[0].msg 
+                    || "что то пошло не так")
+            }
+
             const data = await res.json()
-            console.log(data)
+            
             setBooks(data.docs)
+            
+        } catch (error) {
+            console.error(error)
+            setError(error.message)
+        } finally {
+            setIsLoading(false)
+        }
         }
         LoadBooks()
     }, [queryParams])
+
     const handleSubmit = (e) => {
         e.preventDefault()
         if (textField.trim() === "") return
@@ -56,9 +79,16 @@ const Search = () => {
                     —
                 </span>
             </div>
-            <div className="book-grid" id="results">
-                {books.map((e) => (<BookCard />))}
+            {isLoading && <Loader />}
+            {!isLoading && error && <p>{error}</p>}
+            {!isLoading && !error && (<div className="book-grid" id="results">
+                {books.map((e) => 
+                        {
+                            const {key, ...props} = e
+                        return <BookCard {...props} bookKey={e.key} key={e.key}  />}
+                    )}
             </div>
+            )}
         </section>
     )
 }

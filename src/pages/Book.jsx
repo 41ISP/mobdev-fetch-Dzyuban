@@ -1,31 +1,87 @@
+import { useState } from "react"
+import { useEffect } from "react"
+import { useParams } from "react-router-dom"
+import Loader from '../components/Loader'
+
 const Book = () => {
-    return (
+
+    // стэйты
+    const { id } = useParams()
+
+    const [book, setBook] = useState(undefined)
+
+    const [error, setError] = useState(null)
+
+    const [isLoading, setIsLoading] = useState(false)
+    // стэйты
+    
+    useEffect(() => {
+        const LoadBooks = async () => {
+            try {
+            setIsLoading(true)
+            const res = await fetch("https://openlibrary.org/works/" + id + ".json")
+            
+            if (!res.ok) {
+                const errorData = await res.json()
+
+                throw new Error("что то пошло не так",)
+            }
+
+            const data = await res.json()
+            
+
+            ///////////////////////////////////////////////////////////////////
+            if (data.authors[0].author.key) 
+                {const authorRes = await fetch("https://openlibrary.org" + data.authors[0].author.key + ".json", )
+            
+                const authorDate = await authorRes.json()
+                data.author = authorDate.name
+            }
+
+////////////////////////////////////////////////////
+            setBook(data)
+            
+        } catch (error) {
+            console.error(error)
+            setError(error.message)
+        } finally {
+            setIsLoading(false)
+        }
+        }
+        LoadBooks()
+    }, [id])
+    if (isLoading) return <Loader />
+
+    if (!isLoading && error) return <p>{error}</p>
+
+    if (book) return (
         <section className="book-page">
             <div className="book-page-cover">
                 <img
                     id="bookCover"
-                    src="https://covers.openlibrary.org/b/id/8231856-L.jpg"
+                    src={`https://covers.openlibrary.org/b/id/${book.covers[0]}-L.jpg`}
                     alt=""
                 />
             </div>
             <div className="book-page-content">
                 <div className="section-label">КНИГА</div>
-                <h1 id="bookTitle">The Little Prince</h1>
+                <h1 id="bookTitle">{book.title}</h1>
                 <div className="book-page-author" id="bookAuthor">
-                    Antoine de Saint-Exupéry
+                    {book.author}
                 </div>
                 <div className="book-meta">
-                    <span id="bookYear">1943</span>
+                    <span id="bookYear">{book.first_publish_date}</span>
                     <span>Fiction</span>
                 </div>
-                <div className="description">
+                {book?.description?.value &&
+                    <div className="description">
                     <h3>Об этой книге</h3>
                     <p id="bookDescription">
-                        The Little Prince is a poetic tale about a young prince
-                        who travels from planet to planet and learns about
-                        friendship, love and the strange behavior of adults.
+                        {book.description.value}
                     </p>
                 </div>
+                }
+                
                 <div className="modal-actions">
                     <button className="primary-button">Читать</button>
                     <button className="secondary-button">♡ Сохранить</button>
